@@ -36,7 +36,6 @@
             .navigation { flex-direction: column; }
             .option { font-size: 1.1em; padding: 18px; }
         }
-        @media print { .no-print { display: none; } }
     </style>
 </head>
 <body>
@@ -49,7 +48,7 @@
     
     <h1>114年駕駛及隨車人員幼童車研習考題</h1>
 
-    <div v-if="stage === 'setup'">
+    <div v-if="stage === 'setup' && !isSubmitting">
         <div class="form-group"><label>姓名</label><input v-model="user.name" placeholder="請輸入姓名"></div>
         <div class="form-group"><label>服務之幼兒園</label><input v-model="user.school" placeholder="請輸入幼兒園名稱"></div>
         <div class="form-group">
@@ -63,13 +62,13 @@
         <div style="background: #fff9db; padding: 20px; border-radius: 8px; margin-bottom: 10px; font-size: 0.95em;">
             <strong>⚠️ 注意事項：</strong><br>
             • 限時 60 分鐘，中途關閉視窗將不計分。<br>
-            • 點擊「確認繳交」後成績會即時傳送到教育局/園所後台。<br>
+            • 點擊「確認繳交」後成績會即時傳送到後台。<br>
             • 建議使用 Chrome 或 Safari 瀏覽器以確保 PDF 下載功能正常。
         </div>
         <button class="btn btn-primary" @click="startQuiz">進入測驗</button>
     </div>
 
-    <div v-if="stage === 'quiz'">
+    <div v-if="stage === 'quiz' && !isSubmitting">
         <div class="timer">⏳ 剩餘：{{ formatTime(timeLeft) }}</div>
         <div class="question-box">
             <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">進度：{{ currentIdx + 1 }} / 34</div>
@@ -115,10 +114,7 @@
 </div>
 
 <script>
-// ==========================================
-// 1. 請在此處貼上您從 GAS 取得的「網頁應用程式 URL」
-// ==========================================
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzTGeIo3z8t_k1fHlcEWr8UOTU5lwZHJ3kO_ABlpzTaE0PBQ1vojm7X-FP13XYuXjI/exec'; 
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzTGeIo3z8t_k1fHlcEWr8UOTU5lwZHJ3kO_ABlpzTaE0PBQ1vojm7X-FP13XYuXjI/exec'; // 請務必確認這裡有貼對
 
 const { createApp } = Vue;
 createApp({
@@ -143,4 +139,17 @@ createApp({
                 { q: "幼童專用車載運幼兒時，法規對行駛路段有何限制？", options: {A: "不得行駛快速道路", B: "不得行駛高速公路", C: "不得行駛市區主要幹道", D: "不得行駛隧道"}, ans: "B", desc: "管理辦法第 9 條規定，載運幼兒時不得行駛高速公路。" },
                 { q: "幼童專用車駕駛人每次行車前，應確實檢查哪些設備並留存紀錄？", options: {A: "車況、滅火器、安全門及安全設備", B: "僅需檢查油量與水箱", C: "僅需檢查輪胎胎紋", D: "每週檢查一次即可"}, ans: "A", desc: "管理辦法第 12 條要求每次行前檢查關鍵安全設備。" },
                 { q: "幼童專用車的行前檢查紀錄及檢修紀錄，至少應留存多久以備檢查？", options: {A: "三個月", B: "半年", C: "一年", D: "三年"}, ans: "C", desc: "管理辦法第 12 條規定，紀錄至少應留存一年。" },
-                { q
+                { q: "依《幼兒教育及照顧法》，若幼兒園使用未經核准之幼童專用車，最高可處多少罰鍰？", options: {A: "一萬元", B: "三萬元", C: "十萬元", D: "五十萬元"}, ans: "B", desc: "依幼教法相關罰則，處三千元至三萬元罰鍰。" },
+                { q: "隨車人員於每次幼兒上下車時，應如何確保幼兒安全？", options: {A: "僅需口頭詢問", B: "請駕駛人代點名", C: "依乘坐名冊逐一清點並留存紀錄", D: "免清點"}, ans: "C", desc: "管理辦法第 13 條規定應逐一清點並留存紀錄。" },
+                { q: "根據《臺北市學生及幼兒交通車管理自治條例》，幼童專用車駕駛人應定期接受何種訓練？", options: {A: "進階駕駛訓練", B: "交通安全及緊急救護演練相關訓練", C: "車輛維修訓練", D: "不需訓練"}, ans: "B", desc: "自治條例要求定期辦理交通安全及緊急救護教育訓練。" },
+                { q: "幼童專用車發生行車事故時，駕駛人及隨車人員首要工作為何？", options: {A: "打電話給園長", B: "立即疏散幼兒", C: "拍照存證", D: "留在原位"}, ans: "B", desc: "管理辦法第 14 條規定，應立即疏散幼兒。" },
+                { q: "依《幼兒教育及照顧法》，隨車人員是否可以由年滿 18 歲之志工擔任？", options: {A: "可以", B: "不可以，必須符合法定資格且無消極資格", C: "可以，經園長同意", D: "不限年齡"}, ans: "B", desc: "必須符合法定資格，不得有虐童或性侵等紀錄。" },
+                { q: "《臺北市學生及幼兒交通車管理自治條例》規定，幼童專用車外觀應加漆哪些資訊？", options: {A: "園所電話", B: "立案字號、車號、出廠年份及乘載人數", C: "駕駛手機", D: "政府標章"}, ans: "B", desc: "自治條例第 5 條規定應於兩邊外側加漆行政核備資訊。" },
+                { q: "幼童專用車之駕駛人，其最高年齡限制為多少歲？", options: {A: "六十歲", B: "六十五歲", C: "七十歲", D: "無限制"}, ans: "B", desc: "依管理辦法第 11 條，原則上不得超過六十五歲。" },
+                { q: "若幼童專用車逾期未汰換（超過 10 年），除罰鍰外還會面臨何種處分？", options: {A: "吊銷駕照", B: "沒入車輛", C: "限期改善，屆期未改按次處罰", D: "勒令停業"}, ans: "C", desc: "應限期改善，否則可連續處罰甚至停辦。" },
+                { q: "幼兒園幼童專用車的車身顏色應符合哪項標準？", options: {A: "純白色", B: "鮮黃色搭配紅色條紋", C: "亮橘色", D: "自行決定"}, ans: "B", desc: "應依規定使用標準鮮黃色並標示紅色條紋。" },
+                { q: "隨車人員在幼兒下車後，最重要的一個動作是什麼？", options: {A: "關門", B: "確認車內已無留置幼兒", C: "畫路線圖", D: "填加油紀錄"}, ans: "B", desc: "必須巡查座位，確保無幼兒遺留。" },
+                { q: "依《臺北市學生及幼兒交通車管理自治條例》，交通車駕駛人若患有何種疾病應停止工作？", options: {A: "輕微感冒", B: "足以影響行車及安全之疾病", C: "慢性腰痛", D: "近視"}, ans: "B", desc: "自治條例第 7 條規定，有影響安全之疾病應即停止駕駛。" },
+                { q: "幼兒園應將「乘坐幼童專用車幼兒名冊」如何處理？", options: {A: "放園長室", B: "貼車窗", C: "由隨車人員隨身攜帶並落實紀錄", D: "免記錄"}, ans: "C", desc: "名冊應隨車供人員清點並紀錄。" },
+                { q: "若幼童專用車駕駛人因故臨時請假，應如何處理代理事宜？", options: {A: "老師代開", B: "園長親自開", C: "聘請具職業執照且符合資格人員代理", D: "志工協助"}, ans: "C", desc: "駕駛人及代理人皆必須具備職業駕駛執照。" },
+                { q: "幼兒園更換人員時，應於多久時間內報主管機關備查？", options: {A: "三天內", B: "十五日內", C: "一個月內", D: "學期末"}, ans: "B", desc: "人員異動應於十五日內報請教育局備
