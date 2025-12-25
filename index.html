@@ -29,16 +29,12 @@
         .explain-item { border-left: 5px solid var(--secondary); padding: 15px; margin-bottom: 20px; background: #fafafa; border-radius: 0 12px 12px 0; }
         .correct { color: var(--success); font-weight: bold; }
         .wrong { color: var(--danger); font-weight: bold; }
-
-        /* 手機 RWD 優化 */
         @media (max-width: 600px) {
             body { padding: 10px; }
             .container { padding: 15px; border-radius: 0; }
             h1 { font-size: 1.3em; }
             .navigation { flex-direction: column; }
-            .navigation button { width: 100%; }
             .option { font-size: 1.1em; padding: 18px; }
-            .timer { font-size: 1.1em; }
         }
         @media print { .no-print { display: none; } }
     </style>
@@ -119,8 +115,8 @@
 </div>
 
 <script>
-// --- 這裡請貼上您的 Google 網址 ---
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzTGeIo3z8t_k1fHlcEWr8UOTU5lwZHJ3kO_ABlpzTaE0PBQ1vojm7X-FP13XYuXjI/exec'; 
+// --- 請貼上您重新部署後的 GAS 網址 ---
+const SHEET_URL = '您https://script.google.com/macros/s/AKfycbzTGeIo3z8t_k1fHlcEWr8UOTU5lwZHJ3kO_ABlpzTaE0PBQ1vojm7X-FP13XYuXjI/exec'; 
 
 const { createApp } = Vue;
 createApp({
@@ -211,9 +207,15 @@ createApp({
                 usedTime: this.usedTimeText
             });
 
-            // 使用 doGet 傳輸 (穩定、支援跨網域)
-            const img = new Image();
-            img.src = `${SHEET_URL}?${params.toString()}`;
+            try {
+                // 使用 fetch 的 no-cors 模式確保發送成功
+                await fetch(`${SHEET_URL}?${params.toString()}`, {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+            } catch (error) {
+                console.error("提交出錯，但可能已送出:", error);
+            }
 
             setTimeout(() => {
                 this.isSubmitting = false;
