@@ -152,4 +152,63 @@ createApp({
                 { q: "依《臺北市學生及幼兒交通車管理自治條例》，交通車駕駛人若患有何種疾病應停止工作？", options: {A: "輕微感冒", B: "足以影響行車及安全之疾病", C: "慢性腰痛", D: "近視"}, ans: "B", desc: "自治條例第 7 條規定，有影響安全之疾病應即停止駕駛。" },
                 { q: "幼兒園應將「乘坐幼童專用車幼兒名冊」如何處理？", options: {A: "放園長室", B: "貼車窗", C: "由隨車人員隨身攜帶並落實紀錄", D: "免記錄"}, ans: "C", desc: "名冊應隨車供人員清點並紀錄。" },
                 { q: "若幼童專用車駕駛人因故臨時請假，應如何處理代理事宜？", options: {A: "老師代開", B: "園長親自開", C: "聘請具職業執照且符合資格人員代理", D: "志工協助"}, ans: "C", desc: "駕駛人及代理人皆必須具備職業駕駛執照。" },
-                { q: "幼兒園更換人員時，應於多久時間內報主管機關備查？", options: {A: "三天內", B: "十五日內", C: "一個月內", D: "學期末"}, ans: "B", desc: "人員異動應於十五日內報請教育局備
+                { q: "幼兒園更換人員時，應於多久時間內報主管機關備查？", options: {A: "三天內", B: "十五日內", C: "一個月內", D: "學期末"}, ans: "B", desc: "人員異動應於十五日內報請教育局備查。" },
+                { q: "下列何者屬於交通人員「消極資格」，具備即不得擔任？", options: {A: "曾有性騷擾或虐童行為經判刑確定", B: "未滿三十歲", C: "非教育系", D: "患有近視"}, ans: "A", desc: "涉及性侵、虐童等重大情事者，嚴禁在園內服務。" },
+                { q: "隨車人員職前訓練應包含哪項重點？", options: {A: "幼兒心理", B: "交通車安全與緊急應變處置", C: "引擎維修", D: "行銷技巧"}, ans: "B", desc: "強調安全與應變教育訓練。" },
+                { q: "若長期由「未報部核准」人員擔任隨車工作，會如何處分？", options: {A: "口頭警告", B: "處負責人罰鍰並令限期改善", C: "扣押車輛", D: "停職一個月"}, ans: "B", desc: "違反人員資格規定，將面臨罰鍰並限期改善。" },
+                { q: "駕駛人代理期間，是否也需要接受定期健康檢查？", options: {A: "不用", B: "代理超過一年才要", C: "仍須持有一年內之合格健檢紀錄", D: "不用健檢"}, ans: "C", desc: "只要執業，就必須符合法規健檢標準。" },
+                { q: "隨車代理期間發生幼兒遺留車內事故，法律責任歸屬為何？", options: {A: "免責", B: "駕駛全責", C: "代理人及園所負責人均須負責", D: "工會負責"}, ans: "C", desc: "代理人職權等同正式人員，仍須負擔法律責任。" },
+                { q: "駕駛人可否同時兼任隨車人員清點人數？", options: {A: "可以", B: "停妥就可以", C: "不可以，隨車人員應為駕駛以外之人", D: "人數少可以"}, ans: "C", desc: "管理辦法第 13 條規定隨車人員需配置至少一人（不含駕駛）。" },
+                { q: "建立「代理人員名冊」的主要目的是什麼？", options: {A: "增加負擔", B: "應付路檢", C: "確保突發狀況有合格人員接手", D: "領補助"}, ans: "C", desc: "確保臨時請假時，仍能維持法定安全標準。" },
+                { q: "幼童專用車領牌後，應於幾日內報主管機關備查？", options: {A: "立即", B: "五日內", C: "十五日內", D: "三十日內"}, ans: "C", desc: "領牌後十五日內應報請備查。" },
+                { q: "幼童專用車汰換時，第一步程序為何？", options: {A: "賣掉", B: "先找教育局", C: "先向監理機關辦理報廢，再報教育局備查", D: "通知家長"}, ans: "C", desc: "應向監理機關辦理後，再報請教育局備查。" },
+                { q: "交通車停止使用或報廢，應於事實發生後多久內申報？", options: {A: "三日內", B: "七日內", C: "十五日內", D: "三十日內"}, ans: "C", desc: "異動申報通常採十五日準則。" },
+                { q: "報請備查幼童車時，哪一項「不是」法定文件？", options: {A: "立案證書", B: "行照", C: "駕駛良民證", D: "幼兒園伙食菜單"}, ans: "D", desc: "車輛備查與伙食菜單無關。" },
+                { q: "私自用未核准車輛載運幼兒，可採取何種處分？", options: {A: "沒收車輛", B: "限期改善，屆期未改按次處罰", C: "吊銷證件", D: "沒收立案證書"}, ans: "B", desc: "行政處罰流程為：限期改善 → 連續罰 → 減少招收/停辦。" }
+            ]
+        };
+    },
+    methods: {
+        startQuiz() {
+            if(!this.user.name || !this.user.school || !this.user.role) return alert('請填寫完整資訊');
+            this.stage = 'quiz';
+            this.timer = setInterval(() => { this.timeLeft--; if(this.timeLeft<=0) this.submitQuiz(); }, 1000);
+        },
+        formatTime(s) { return `${Math.floor(s/60)}分${s%60}秒`; },
+        next() { if(this.currentIdx < 33) this.currentIdx++; },
+        prev() { if(this.currentIdx > 0) this.currentIdx--; },
+        confirmSubmit() { if(confirm('確定繳交？')) this.submitQuiz(); },
+        async submitQuiz() {
+            clearInterval(this.timer);
+            this.isSubmitting = true;
+            
+            let correct = 0;
+            this.allQuestions.forEach((q, i) => { if(this.userAnswers[i] === q.ans) correct++; });
+            this.score = Math.round((correct / 34) * 100);
+            this.usedTimeText = this.formatTime(3600 - this.timeLeft);
+            this.finishDate = new Date().toLocaleString();
+
+            try {
+                const params = new URLSearchParams({...this.user, score: this.score, usedTime: this.usedTimeText});
+                await fetch(`${SHEET_URL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' });
+            } catch (e) { console.log(e); }
+
+            setTimeout(() => {
+                this.isSubmitting = false;
+                this.stage = 'result';
+                window.scrollTo(0,0);
+            }, 1500);
+        },
+        downloadPDF(event) {
+            const btn = event.target;
+            btn.innerText = "⏳ 產生中...";
+            html2pdf().set({ margin: 10, filename: `成績_${this.user.name}.pdf` })
+                .from(document.getElementById('result-content'))
+                .save().then(() => btn.innerText = "⬇ 下載 PDF");
+        }
+    },
+    computed: { currentQuestion() { return this.allQuestions[this.currentIdx]; } }
+}).mount('#app');
+</script>
+</body>
+</html>
