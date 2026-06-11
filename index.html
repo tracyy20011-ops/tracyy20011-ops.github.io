@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>114年台北市幼童車安全教育研習考題</title>
+    <title>115年臺北市幼童車隨車人員安全教育研習</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --danger: #e74c3c; }
+        :root { --primary: #2c3e50; --secondary: #e67e22; --success: #27ae60; --danger: #e74c3c; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: var(--primary); line-height: 1.6; }
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: var(--primary); border-bottom: 2px solid var(--secondary); padding-bottom: 15px; margin-bottom: 25px; font-size: 1.4em; }
@@ -25,44 +25,52 @@
         .option input { width: auto; margin-right: 15px; transform: scale(1.3); }
         .navigation { display: flex; justify-content: space-between; margin-top: 25px; gap: 10px; }
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999; }
-        .result-box { background: #e8f4fd; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        .result-box { background: #fff3e0; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
         .explain-item { border-left: 5px solid var(--secondary); padding: 15px; margin-bottom: 20px; background: #fafafa; border-radius: 0 12px 12px 0; border-bottom: 1px solid #eee; }
         .correct { color: var(--success); font-weight: bold; }
         .wrong { color: var(--danger); font-weight: bold; }
-        [v-cloak] { display: none; }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 15px; border-radius: 0; }
+            .navigation { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
 
-<div id="app" class="container" v-cloak>
+<div id="app" class="container">
     <div v-if="isSubmitting" class="loading-overlay">
-        <div style="font-size: 24px; font-weight: bold; color: var(--secondary);">📝 資料處理中...</div>
-        <p>正在上傳成績至試算表，請稍候</p>
+        <div style="font-size: 24px; font-weight: bold; color: var(--secondary);">📝 資料同步中...</div>
+        <p>正在將您的成績上傳至試算表</p>
     </div>
     
-    <h1>114年度幼童專用車駕駛及隨車人員安全教育研習</h1>
+    <h1>臺北市115年度幼童專用車隨車人員安全教育研習</h1>
 
-    <div v-if="stage === 'setup'">
-        <div class="form-group"><label>姓名</label><input v-model.trim="user.name" placeholder="請輸入姓名"></div>
-        <div class="form-group"><label>服務之幼兒園</label><input v-model.trim="user.school" placeholder="請輸入單位名稱"></div>
+    <div v-if="stage === 'setup' && !isSubmitting">
+        <div class="form-group"><label>姓名</label><input v-model="user.name" placeholder="請輸入姓名"></div>
+        <div class="form-group"><label>服務之幼兒園</label><input v-model="user.school" placeholder="請輸入幼兒園名稱"></div>
         <div class="form-group">
-            <label>身分選擇 (不同身分考題不同)</label>
+            <label>身分</label>
             <select v-model="user.role">
-                <option value="">請選擇</option>
-                <option value="駕駛人員">駕駛人員</option>
                 <option value="隨車人員">隨車人員</option>
             </select>
         </div>
-        <button class="btn btn-primary" @click="startQuiz">開始測驗</button>
+        <div style="background: #fff9db; padding: 15px; border-radius: 8px; margin-bottom: 10px; font-size: 0.9em;">
+            <strong>測驗說明：</strong><br>
+            • 本次測驗共 40 題，每題 2.5 分，滿分 100 分。<br>
+            • 限時 60 分鐘，繳交後不可修改。<br>
+            • 測驗結束後可下載 PDF 成績單。
+        </div>
+        <button class="btn btn-primary" @click="startQuiz">開始進入測驗</button>
     </div>
 
-    <div v-if="stage === 'quiz'">
+    <div v-if="stage === 'quiz' && !isSubmitting">
         <div class="timer">⏳ 剩餘時間：{{ formatTime(timeLeft) }}</div>
-        <div class="question-box" v-if="currentQuestion">
+        <div class="question-box">
             <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">
-                【{{ user.role }}組】 第 {{ currentIdx + 1 }} 題 / 共 {{ currentQuestions.length }} 題
+                第 {{ currentIdx + 1 }} 題 / 共 40 題
             </div>
-            <h3 style="margin-top: 0; font-size: 1.1em; line-height: 1.4;">{{ currentQuestion.q }}</h3>
+            <h3 style="margin-top: 0; font-size: 1.15em;">{{ currentQuestion.q }}</h3>
             <div class="options-container">
                 <label v-for="(opt, key) in currentQuestion.options" :key="key" class="option">
                     <input type="radio" :name="'q'+currentIdx" :value="key" v-model="userAnswers[currentIdx]">
@@ -72,226 +80,149 @@
         </div>
         <div class="navigation">
             <button class="btn btn-outline" @click="prev" :disabled="currentIdx === 0">上一題</button>
-            <button class="btn btn-outline" @click="next" v-if="currentIdx < currentQuestions.length - 1">下一題</button>
-            <button class="btn btn-success" @click="confirmSubmit" v-else>確認繳交並回傳</button>
+            <button class="btn btn-outline" @click="next" v-if="currentIdx < 39">下一題</button>
+            <button class="btn btn-success" @click="confirmSubmit" v-else>確認繳交試卷</button>
         </div>
     </div>
 
     <div v-if="stage === 'result'" id="result-content">
         <div class="result-box">
-            <h2 style="text-align: center; color: var(--secondary);">測驗成績單 (資料已同步)</h2>
+            <h2 style="text-align: center; color: var(--secondary);">115年度研習測驗成績單</h2>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>姓名：{{ user.name }}</div>
                 <div>身分：{{ user.role }}</div>
                 <div>單位：{{ user.school }}</div>
-                <div style="color: var(--danger); font-weight: bold;">得分：{{ score }} 分</div>
-                <div style="grid-column: span 2;">完成時間：{{ finishDate }}</div>
+                <div style="color: var(--danger); font-weight: bold; font-size: 1.3em;">得分：{{ score }} 分</div>
+                <div style="grid-column: span 2;">完成時間：{{ finishDate }} (耗時 {{ usedTimeText }})</div>
             </div>
         </div>
 
-        <div style="text-align: center; margin: 20px 0;">
-            <button class="btn btn-primary" @click="downloadPDF($event)">下載 PDF 成績存證</button>
+        <div style="text-align: center; margin: 20px 0;" class="no-print">
+            <button class="btn btn-primary" @click="downloadPDF($event)">下載 PDF 成績紀錄</button>
         </div>
 
         <h3>題目解析</h3>
-        <div v-for="(q, index) in currentQuestions" :key="index" class="explain-item">
+        <div v-for="(q, index) in allQuestions" :key="index" class="explain-item">
             <p><strong>{{ index + 1 }}. {{ q.q }}</strong></p>
-            <p>您的答案：<span :class="userAnswers[index] === q.ans ? 'correct' : 'wrong'">{{ userAnswers[index] || '未答' }}</span> | 正確答案：<span class="correct">({{ q.ans }}) {{ q.options[q.ans] }}</span></p>
-            <p style="color: #666; font-size: 0.9em; background: #eee; padding: 10px; border-radius: 5px;"><strong>解析：</strong>{{ q.desc }}</p>
+            <p>
+                您的答案：<span :class="userAnswers[index] === q.ans ? 'correct' : 'wrong'">{{ userAnswers[index] || '未答' }}</span> | 
+                正解：<span class="correct">{{ q.ans }}</span>
+            </p>
+            <p style="color: #666; font-size: 0.9em;">解析：{{ q.desc }}</p>
         </div>
     </div>
 </div>
 
 <script>
+/**
+ * ⚠️ 請將下方的網址替換為您在 Apps Script 部署得到的 URL
+ */
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwfjVeMwdFnK3RYd05lNXP4oYcL5TfJ0qZxG5VGy6jxOt7Zvq8p0gph-4l6DZzGfCLaHA/exec';
+
 const { createApp } = Vue;
-
-// 請在此處填入您 Google Apps Script 的「網頁應用程式 URL」
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxqVWonMEhtD-BemZV4I48ZR3BVn3Jqt76qQeD9MvW-w0wrfrcE2evNLHUR7iz-Kqc/exec"; 
-
-// 題目資料 (維持原樣)
-const commonQuestions = [
-    { q: "根據《幼兒園幼童專用車輛與其駕駛人及隨車人員督導管理辦法》，幼童專用車的出廠年限不得超過幾年？", options: {A: "五年", B: "八年", C: "十年", D: "十二年"}, ans: "C", desc: "依據管理辦法第 4 條，幼童專用車車齡不得逾出廠十年，逾期應予汰換。" },
-    { q: "依《幼兒教育及照顧法》，幼兒園使用幼童專用車載運幼兒時，每幾位幼兒至少應配置隨車人員一人？", options: {A: "十人", B: "十五人", C: "二十人", D: "二十五人"}, ans: "C", desc: "根據幼教法及管理辦法第 13 條，每二十人至少應配置隨車人員一人。" },
-    { q: "根據《臺北市學生及幼兒交通車管理自治條例》，新購置的幼童專用車應符合什麼條件？", options: {A: "出廠五年內之二手車", B: "出廠一年內及第一次領牌之新車", C: "只要車齡在十年內皆可", D: "不限出廠年份，經檢驗合格即可"}, ans: "B", desc: "依臺北市自治條例第 4 條，應購置出廠日起一年內且第一次領牌之新車。" },
-    { q: "幼童專用車之駕駛人，到職時應附多久時間內的健康檢查報告？", options: {A: "三個月內", B: "六個月內", C: "一年內", D: "兩年內"}, ans: "C", desc: "根據管理辦法第 11 條規定，應附一年內之合格健康檢查報告。" },
-    { q: "幼兒園應將幼童專用車之行車路線報請哪一個單位備查？", options: {A: "警察局交通大隊", B: "交通部公路總局", C: "直轄市、縣（市）主管機關", D: "行政院教育部"}, ans: "C", desc: "依據管理辦法第 5 條，幼兒園應將幼童專用車之行車路線報請直轄市、縣（市）主管機關備查。" },
-    { q: "幼童專用車載運幼兒時，法規對行駛路段有何限制？", options: {A: "不得行駛快速道路", B: "不得行駛高速公路", C: "不得行駛市區主要幹道", D: "不得行駛隧道"}, ans: "B", desc: "根據臺北市自治條例第 6 條，幼童專用車載運幼兒時，不得行駛高速公路。" },
-    { q: "幼童專用車駕駛人每次行車前，應確實檢查哪些設備並留存紀錄？", options: {A: "車況、滅火器、安全門及安全設備", B: "僅需檢查油量", C: "僅需檢查輪胎", D: "每週檢查一次即可"}, ans: "A", desc: "依據管理辦法第 12 條，行車前應檢查車況、滅火器、安全門及安全設備並紀錄。" },
-    { q: "幼童專用車的行前檢查紀錄及檢修紀錄，至少應留存多久以備檢查？", options: {A: "三個月", B: "半年", C: "一年", D: "三年"}, ans: "C", desc: "紀錄至少應留存一年。" },
-    { q: "依《幼兒教育及照顧法》，若幼兒園使用未經核備之幼童專用車，最高可處多少罰鍰？", options: {A: "新臺幣一萬元", B: "新臺幣九萬元", C: "新臺幣三萬元", D: "新臺幣五十萬元"}, ans: "B", desc: "依幼教法第 50 條規定，最高可處新臺幣九萬元罰鍰。" },
-    { q: "隨車人員或駕駛人於每次幼兒上下車時，應如何確保幼兒安全？", options: {A: "口頭詢問", B: "請駕駛人代為點名", C: "依乘坐名冊逐一清點並留存紀錄", D: "視情況而定"}, ans: "C", desc: "應依乘坐名冊逐一清點並落實紀錄。" },
-    { q: "根據《臺北市學生及幼兒交通車管理自治條例》，交通車駕駛人應定期接受何種訓練？", options: {A: "進階駕駛訓練", B: "交通安全及緊急救護演練相關訓練", C: "車輛維修基礎訓練", D: "不需參加任何訓練"}, ans: "B", desc: "每年應接受至少 8 小時之訓練。" },
-    { q: "幼童專用車發生行車事故時，駕駛人及隨車人員首要工作為何？", options: {A: "打給園長回報", B: "立即疏散幼兒", C: "下車拍照存證", D: "留在原位等待救援"}, ans: "B", desc: "發生事故時應以疏散幼兒至安全地帶為首要原則。" },
-    { q: "依《幼兒教育及照顧法》，隨車人員是否可以由年滿 18 歲之志工擔任？", options: {A: "可以，只要有熱誠即可", B: "不可以，必須符合法定資格且無消極資格", C: "可以，但需經園長同意", D: "不可以，必須由班級老師親自擔任"}, ans: "B", desc: "隨車人員須由幼兒園聘請符合資格且無消極資格之人員擔任。" },
-    { q: "《臺北市學生及幼兒交通車管理自治條例》規定，幼童專用車外觀兩邊應加漆哪些資訊？", options: {A: "園所電話及地址", B: "立案字號、車號、出廠年份及乘載人數", C: "駕駛人姓名及聯絡方式", D: "政府核發的合格標章"}, ans: "B", desc: "車身兩側應標明立案字號、車號、年份及乘載人數。" },
-    { q: "幼童專用車之駕駛人，其最高年齡限制為多少歲？", options: {A: "六十歲", B: "六十五歲", C: "七十歲", D: "無限制"}, ans: "B", desc: "依據管理辦法第 10 條，年齡不得超過六十五歲。" },
-    { q: "若幼童專用車逾期未汰換（超過 10 年），除了罰鍰外還會面臨何種處分？", options: {A: "吊銷駕駛人駕照", B: "直接沒入該車輛", C: "命其限期改善，屆期未改善者得按次處罰", D: "勒令幼兒園停業"}, ans: "C", desc: "逾期未汰換應限期改善，屆期仍未改善者得按次處罰。" },
-    { q: "幼兒園幼童專用車的車身顏色應符合哪項標準？", options: {A: "純白色車身", B: "鮮黃色搭配紅色條紋", C: "亮橘色車身", D: "由各園自行設計美觀色系"}, ans: "B", desc: "依管理辦法規定，車身顏色應為鮮黃色並標示紅色條紋。" },
-    { q: "隨車人員在幼兒下車後，最重要的一個動作是什麼？", options: {A: "關閉所有車門", B: "確認車內已無留置幼兒", C: "準備下一趟的路線圖", D: "填寫今日的油錢紀錄"}, ans: "B", desc: "確認車內已無留置幼兒，避免遺忘幼兒導致意外。" },
-    { q: "依《臺北市學生及幼兒交通車管理自治條例》，交通車駕駛人若患有何種疾病應停止工作？", options: {A: "一般的感冒症狀", B: "足以影響行車及學童安全之疾病", C: "偶發性的腰痠背痛", D: "輕微的近視"}, ans: "B", desc: "患有足以影響行車安全之疾病應立即停止其工作。" },
-    { q: "幼兒園應將「乘坐幼童專用車幼兒名冊」如何處理？", options: {A: "統一存放在園長室櫃子", B: "張貼在車窗明顯處", C: "由隨車人員隨身攜帶並落實紀錄", D: "每週更新一次即可"}, ans: "C", desc: "名冊應隨車攜帶，以利清點人數及應變。" },
-    { q: "若幼童專用車駕駛人因故臨時請假，幼兒園應如何處理代理事宜？", options: {A: "由班級老師代領駕車", B: "由園長親自駕駛", C: "應聘請具備職業駕駛執照且符合法規資格之人員代理", D: "請家長志工協助駕駛"}, ans: "C", desc: "代理人亦須符合專業駕照、健檢及無刑事紀錄等資格。" },
-    { q: "幼兒園更換隨車人員或駕駛人時，應於多久時間內報請主管機關備查？", options: {A: "更換前三天", B: "異動後十五日內", C: "異動後三十個工作日內", D: "學期結束後統一報備"}, ans: "C", desc: "依規定，異動應於三十個工作日內報請備查。" },
-    { q: "依《幼兒教育及照顧法》，下列何者屬於駕駛人或隨車人員的「消極資格」（即不得擔任該職務）？", options: {A: "曾有性侵害、性騷擾或霸靈行為經判刑確定", B: "年齡未滿三十歲者", C: "非教育相關科系畢業", D: "患有輕微近視者"}, ans: "A", desc: "凡有重大刑事犯罪紀錄或虐童案件者，皆不得擔任幼童車職務。" },
-    { q: "關於「隨車人員」的職前訓練，應包含下列哪項重點？", options: {A: "幼兒心理諮商課程", B: "交通車安全與緊急應變處置", C: "汽車引擎維修基礎", D: "行銷幼兒園技巧"}, ans: "B", desc: "隨車人員訓練核心在於確保行車安全與應急處理。" },
-    { q: "若幼兒園長期由「未報部核准」之人員擔任隨車工作，主管機關得如何處分？", options: {A: "口頭警告", B: "處幼兒園負責人罰鍰，並令其限期改善", C: "扣押該幼童專用車", D: "立即勒令所有教職員停職"}, ans: "B", desc: "行政疏失將處以罰鍰並要求限期改善。" },
-    { q: "駕駛人或隨車代理人員在代理期間，是否也需要提供健康檢查紀錄？", options: {A: "不用，因屬短期代理", B: "代理超過一年才需要", C: "仍須持有一年內之合格健康檢查紀錄", D: "不強制，由園所自行把關"}, ans: "C", desc: "所有執行職務人員皆須確保健康狀況良好。" },
-    { q: "隨車人員在代理期間，若發生幼兒遺留車內事故，其法律責任歸屬為何？", options: {A: "因是代理人，不需負法律責任", B: "全由駕駛人負責", C: "代理人員及負責人均須負負擔相關行政與法律責任", D: "由該員所屬的工會負責"}, ans: "C", desc: "實際執行業務者與雇主皆有法律責任。" },
-    { q: "依規定，幼童專用車的「駕駛人」可否同時兼任「隨車人員」負責幼兒點名？", options: {A: "可以，只要車子停妥即可", B: "不可以，隨車人員應為駕駛人以外之人", C: "只要幼兒人數不超過五人就可以", D: "視當日人力配置彈性決定"}, ans: "B", desc: "法規明確規定隨車人員應為駕駛人以外之人配置。" },
-    { q: "幼兒園平時應建立「代理人員名冊」並報備，其主要目的是什麼？", options: {A: "增加行政作業負擔", B: "方便路邊攔檢時查核", C: "確保突發狀況時能有已受訓並審核過資格的人員接手", D: "為了領取政府補助"}, ans: "C", desc: "建立代理制度是為了確保隨時都有合規人力應變。" },
-    { q: "幼兒園購置幼童專用車後，應於幾日內報請直轄市、縣（市）主管機關備查？", options: {A: "購置當日", B: "五日內", C: "十五日內", D: "三十日內"}, ans: "C", desc: "領牌後應於十五日內報請備查。" },
-    { q: "幼童專用車因屆滿 10 年欲「汰換」時，第一步行政程序為何？", options: {A: "直接將車輛轉賣二手車商", B: "先行申請異動手續", C: "先向監理機關辦理報廢或繳銷，再報教育局備查", D: "先口頭通知所有家長"}, ans: "C", desc: "應先完成監理機關之行政作業再向教育局報備。" },
-    { q: "若幼童專用車失竊、報廢或停用，應於事實發生後多久時間內申報？", options: {A: "三日內", B: "七日內", C: "十五日內", D: "三十日內"}, ans: "C", desc: "事實發生後十五日內應完成申報。" },
-    { q: "報請主管機關「備查」幼童專用車時，下列哪一項「不是」法定必須檢附的文件？", options: {A: "幼兒園立案證書影本", B: "車輛外觀及內部照片", C: "駕駛人及隨車人員資歷表", D: "幼兒園當月的伙食菜單"}, ans: "D", desc: "伙食菜單與交通車備查行政程序無關。" },
-    { q: "幼兒園若未經核准私自以租賃車載運幼兒，主管機關可採取何種處分？", options: {A: "沒收該車輛", B: "命其限期改善，屆期仍未改善者得減少招收人數或停辦", C: "吊銷園長證書", D: "沒入幼兒園立案證書"}, ans: "B", desc: "違反管理規定將面臨限期改善，嚴重者可減招或停辦。" }
-];
-
-const driverSpecific = [
-    { q: "當你在開車時，發現同學突然倒地不起，接下來該如何做？", options: {A: "執行『叫-叫C-D』", B: "繼續開車", C: "跑去找老師", D: "搬到路邊"}, ans: "A", desc: "應立即執行急救流程：叫、叫、C、D。" },
-    { q: "實行成人心肺復甦術時，體外心臟按壓之速率為何？", options: {A: "每分鐘60-80下", B: "每分鐘80-90下", C: "每分鐘90-100下", D: "每分鐘100-120下"}, ans: "D", desc: "正確速率為每分鐘 100 至 120 下。" },
-    { q: "當你執行心肺復甦術時，評估患者呼吸以不超過幾秒為原則？", options: {A: "2秒", B: "3秒", C: "10秒", D: "無限制"}, ans: "C", desc: "評估呼吸時間不應超過 10 秒。" },
-    { q: "急救流程叫叫CD中，C（胸部按壓）的位置在哪裡？", options: {A: "肚臍上方", B: "兩乳頭連線中間", C: "劍突下方", D: "肚臍連線"}, ans: "B", desc: "按壓位置在兩乳頭連線中點。" },
-    { q: "車輛起火後引導小朋友避難，應往車子的什麼方向引導較正確？", options: {A: "上方", B: "後方", C: "兩側", D: "起火點的反方向"}, ans: "D", desc: "疏散應朝遠離火源的方向進行。" },
-    { q: "路權禮讓觀念與幹支道的區別，下列何者為非？", options: {A: "閃紅燈應禮讓閃黃燈", B: "右方車應禮讓左方車", C: "轉彎車應禮讓直行車", D: "支道車應禮讓幹道車"}, ans: "B", desc: "依規定，左方車應禮讓右方車。" },
-    { q: "幼童專用車行車時遇到地震時，下列何者不是應該採取的應變措施？", options: {A: "駕駛靠右邊停車", B: "避免緊急煞車", C: "車子直接停駛在路中間", D: "打開危險警告燈並減速"}, ans: "C", desc: "不可停路中間阻塞交通。" },
-    { q: "身體著火的正確處置步驟：停、___、滾？", options: {A: "趴", B: "跳", C: "跪", D: "蹲"}, ans: "A", desc: "口訣為：停、趴、滾。" },
-    { q: "火災分類其中B類火災為下列何者？", options: {A: "金屬、汽車零件等火災", B: "電器走火、短路等火災", C: "液體油類等可燃液體火災", D: "木材、紙張等固體材料火災"}, ans: "C", desc: "B類為油類火災。" },
-    { q: "滅火時要針對火的什麼位置滅火效果會最好？", options: {A: "上部", B: "裡面", C: "左邊", D: "底部"}, ans: "D", desc: "應對準火源根部。" },
-    { q: "當車輛發生災害要破壞車窗逃生時應使用車窗擊破器敲擊玻璃的什麼地方？", options: {A: "中心點", B: "車窗上緣", C: "車窗的四個角", D: "以上皆是"}, ans: "C", desc: "強化玻璃的四個角落最脆弱。" },
-    { q: "對成人急救時，正確的胸部按壓深度為多少？", options: {A: "至少 5公分", B: "有壓即可", C: "越深越好", D: "聽到骨折聲"}, ans: "A", desc: "深度應至少 5 公分。" },
-    { q: "成人生存之鏈的第一個環結為何？", options: {A: "立刻實施CPR", B: "大聲求救撥打119", C: "使用AED", D: "高級救命術"}, ans: "B", desc: "第一步為儘早求救。" },
-    { q: "學習心肺復甦術的核心目的何者為非？", options: {A: "搶救黃金時間", B: "增加急救成功率", C: "維護大腦功能", D: "建立個人專長"}, ans: "D", desc: "核心目的是救人。" },
-    { q: "何謂有效胸部按壓？", options: {A: "用力壓、快快壓", B: "胸部完全回彈", C: "按壓不中斷", D: "以上皆是"}, ans: "D", desc: "包含深度、速度、回彈與連續性。" },
-    { q: "發生猝死時黃金急救時間為何者？", options: {A: "1分鐘", B: "2分鐘", C: "4分鐘", D: "10分鐘"}, ans: "C", desc: "黃金急救時間為心跳停止後 4-6 分鐘。" }
-];
-
-const escortSpecific = [
-    { q: "學習心肺復甦術的核心目的何者為非？", options: {A: "維持大腦功能", B: "爭取急救時間", C: "維持血液灌流", D: "建立個人專長"}, ans: "D", desc: "目的是爭取急救時間，維持器官功能。" },
-    { q: "發現同學倒地不起，應執行「叫-叫C-D」，其中第二個叫是？", options: {A: "呼救並打119並取AED", B: "大聲叫救命", C: "叫他的名字", D: "叫救護車即可"}, ans: "A", desc: "第二個「叫」為求救、撥打119並尋找AED。" },
-    { q: "實行成人單人或雙人心肺復甦術時，體外心臟按壓之速率為何？", options: {A: "60-80下/分", B: "80-100下/分", C: "100-120下/分", D: "120-140下/分"}, ans: "C", desc: "速率應維持在每分鐘 100 至 120 下。" },
-    { q: "何謂有效胸部按壓？", options: {A: "用力壓(深5公分)、快快壓(100-120下)", B: "完全回彈", C: "按壓不中斷(不超過10秒)", D: "以上皆是"}, ans: "D", desc: "上述條件均符合才算有效按壓。" },
-    { q: "對成人急救時，正確的胸部按壓深度為多少？", options: {A: "至少 5公分", B: "有壓即可", C: "越多越好", D: "1-2公分"}, ans: "A", desc: "成人深度至少需達 5 公分。" },
-    { q: "發生猝死時黃金急救時間，何者為是？", options: {A: "1分鐘", B: "2分鐘", C: "4分鐘", D: "10分鐘"}, ans: "C", desc: "心跳停止後 4 到 6 分鐘是關鍵。" },
-    { q: "幼童專用車行車時遇到地震時，下列何者不是應該採取的應變措施？", options: {A: "駕駛靠右邊停車", B: "避免緊急煞車", C: "車子直接停駛在路中間", D: "打開危險警告燈"}, ans: "C", desc: "不可停在路中影響救災及交通。" },
-    { q: "車輛起火後引導小朋友避難，應往車子的什麼方向引導較正確？", options: {A: "上方", B: "下方", C: "右側", D: "起火點的反方向"}, ans: "D", desc: "避難原則是遠離起火點。" },
-    { q: "使用AED貼片的位置應蓋貼在患者的右上肩及什麼位置？", options: {A: "左下腋側", B: "背部", C: "額頭", D: "腿部"}, ans: "A", desc: "貼片應貼於右上胸骨下方及左乳頭外側。" },
-    { q: "人無意識復甦姿勢(側臥)以下何者為錯誤？", options: {A: "正面躺", B: "嘴巴朝下以利引流嘔吐物", C: "腿部彎曲使姿勢穩定", D: "頭放手上維持姿勢"}, ans: "A", desc: "正面躺易造成舌頭後墜或嘔吐物阻塞呼吸道。" },
-    { q: "怎麼識別滅火器是否有合格性能檢查？", options: {A: "壓力表指針在綠色區域", B: "瓶身完整無鏽蝕", C: "認明瓶身黏貼之檢修標籤貼紙", D: "重量足夠"}, ans: "C", desc: "應認明由合格機構黏貼之檢修標籤。" },
-    { q: "車用乾粉滅火器的有效期限是幾年？", options: {A: "1年", B: "2年", C: "3年", D: "5年"}, ans: "C", desc: "藥劑有效期限通常為三年。" },
-    { q: "身體著火的正確處置步驟：停、___、滾？", options: {A: "趴", B: "跳", C: "跳入水中", D: "蹲"}, ans: "A", desc: "口訣：停、趴、滾。" },
-    { q: "火災分類其中B類火災為下列何者？", options: {A: "液體油類等可燃液體火災", B: "電器火災", C: "普通火災", D: "金屬火災"}, ans: "A", desc: "B類為液體、油類火災。" },
-    { q: "當車輛發生災害破壞車窗逃生時應敲擊玻璃的什麼地方？", options: {A: "中心點", B: "上緣", C: "車窗的四個角", D: "隨便敲擊"}, ans: "C", desc: "敲擊四個角效果最佳。" },
-    { q: "成人生存之鏈的第一個環結為何？", options: {A: "儘早大聲求救撥打119", B: "CPR", C: "使用AED", D: "高級救命術"}, ans: "A", desc: "首要動作為大聲呼救並撥打 119。" }
-];
-
 createApp({
     data() {
         return {
             stage: 'setup',
             isSubmitting: false,
-            user: { name: '', school: '', role: '' },
+            user: { name: '', school: '', role: '隨車人員' },
             timeLeft: 3600,
             timer: null,
             currentIdx: 0,
-            userAnswers: [],
+            userAnswers: new Array(40).fill(null),
             score: 0,
             finishDate: '',
-            questionBank: {
-                '駕駛人員': [...commonQuestions, ...driverSpecific],
-                '隨車人員': [...commonQuestions, ...escortSpecific]
-            }
+            usedTimeText: '',
+            allQuestions: [
+                { q: "實行成人單人或雙人心肺復甦術時,體外心臟按壓之速率為何？", options: {A: "100〜120 下/分", B: "90~100下/分", C: "80~90下/分", D: "60~80下/分"}, ans: "A", desc: "速率應保持在每分鐘 100 到 120 次，按壓深度約 5-6 公分。" },
+                { q: "當你執行心肺復甦術時,評估患者呼吸以不超過幾秒為原則？", options: {A: "2秒", B: "3秒", C: "10秒", D: "無限制"}, ans: "C", desc: "執行心肺復甦術（CPR）時，評估患者是否有呼吸的時間不應超過10秒。" },
+                { q: "路權禮讓觀念與幹支道的區別，下列何者為非?", options: {A: "轉彎車要禮讓直行車先行", B: "支道車要禮讓幹道車先行", C: "閃光紅燈要禮讓閃光黃燈先行", D: "同為直行或轉彎，右方車要禮讓左方車先行。"}, ans: "D", desc: "路權禮讓原則為「支讓幹、少讓多、轉讓直、左讓右」，同為直行或轉彎時應為左方車禮讓右方車。" },
+                { q: "當你在開車,發現同學突然倒地不起,接下來該如何做？", options: {A: "把同學先搬到旁邊", B: "繼續開不用理會", C: "執行『叫-叫C-D』,要叫叫同學看他有沒有反應及呼吸", D: "跑去找老師"}, ans: "C", desc: "應遵循「叫叫CD」四步驟：確認安全、確認反應與呼吸、求救與找AED、胸外按壓與使用AED。" },
+                { q: "車輛起火後引導小朋友避難，應往車子的什麼方向引導較正確？", options: {A: "兩側", B: "起火點的反方向。", C: "上方", D: "後方"}, ans: "B", desc: "車輛起火時，引導逃生應往火源的反方向、遠離黑煙處，並盡量壓低身形。" },
+                { q: "依《幼兒教育及照顧法》，幼兒園使用幼童專用車載運幼兒時，每幾位幼兒至少應配置隨車人員一人？", options: {A: "十人", B: "十五人", C: "二十人", D: "二十五人"}, ans: "C", desc: "根據幼教法及管理辦法第 13 條，每二十人至少應配置隨車人員一人。" },
+                { q: "根據《幼兒園幼童專用車輛與其駕駛人及隨車人員督導管理辦法》，幼童專用車的出廠年限不得超過幾年？", options: {A: "五年", B: "八年", C: "十年", D: "十二年"}, ans: "C", desc: "依據管理辦法第 4 條，幼童專用車車齡不得逾出廠十年，逾期應予汰換。" },
+                { q: "根據《臺北市學生及幼兒交通車管理自治條例》，若交通車因故停止使用、失竊或報廢，幼兒園應於事實發生後多久時間內，檢具證明文件向教育局申報？", options: {A: "三日內", B: "七日內", C: "三十日內", D: "十五日內"}, ans: "D", desc: "自治條例規定因故停用、失竊或報廢，應於事實發生後十五日內向教育局申報。" },
+                { q: "隨車人員於每次幼兒上下車時，應如何確保幼兒安全？", options: {A: "僅需口頭詢問有無人在車上", B: "依乘坐名冊逐一清點並留存紀錄", C: "請駕駛人代為點名", D: "視情況而定，若人數少可免清點"}, ans: "B", desc: "管理辦法第 13 條規定應依乘坐名冊逐一清點並留存紀錄。" },
+                { q: "《臺北市學生及幼兒交通車管理自治條例》規定，幼童專用車外觀應加漆哪些資訊？", options: {A: "立案字號、車號、出廠年份及乘載人數", B: "幼兒園電話及地址", C: "駕駛人姓名及手機號碼", D: "政府補助之標章"}, ans: "A", desc: "自治條例第 5 條規定應於兩邊外側加漆立案字號、車號、出廠年份及乘載人數。" },
+                { q: "幼兒園幼童專用車的車身顏色應符合哪項標準？", options: {A: "亮橘色", B: "鮮黃色搭配紅色條紋", C: "純白色", D: "由各園自行決定代表色"}, ans: "B", desc: "應依規定使用標準鮮黃色並標示紅色條紋。" },
+                { q: "幼兒園更換隨車人員或駕駛人時，應於多久時間內報主管機關備查？", options: {A: "異動後十五日內", B: "異動後三十個工作日內", C: "更換前三天", D: "每學期末統一呈報即可"}, ans: "B", desc: "教保服務機構於進用教職員工（含隨車與駕駛）後三十個工作日內，應報請教育局備查。" },
+                { q: "幼童專用車載運幼兒時，法規對行駛路段有何限制？", options: {A: "不得行駛高速公路", B: "不得行駛快速道路", C: "不得行駛市區主要幹道", D: "不得行駛隧道"}, ans: "A", desc: "管理辦法第 9 條規定，載運幼兒時不得行駛高速公路。" },
+                { q: "急救的流程是叫、叫、C、D，其中的C是CPR，CPR按壓的地方？", options: {A: "劍突下方 2指幅", B: "肚臍連線中間", C: "肚臍上方2指幅", D: "乳頭連線中間。"}, ans: "D", desc: "急救口訣中的C（胸部按壓）位置在患者兩乳頭連線的中央（胸骨下半段）。" },
+                { q: "依規定，幼童專用車的「駕駛人」可否同時兼任「隨車人員」清點幼兒人數？", options: {A: "可以", B: "只有在幼兒人數少於 5 人時可以", C: "不可以，隨車人員應為駕駛人以外之人", D: "只要車輛停妥就可以"}, ans: "C", desc: "管理辦法第 13 條明定隨車人員需配置至少一人（不含駕駛），兩者職責應分立以確保安全。" },
+                { q: "依《幼兒教育及照顧法》，下列何者屬於駕駛人或隨車人員的「消極資格」，一旦具備即不得擔任該職務？", options: {A: "非教育相關科系畢業", B: "未滿三十歲", C: "患有輕微近視", D: "曾有性侵害、性騷擾或霸凌行為經判刑確定"}, ans: "D", desc: "依幼教法第 23 條，涉及性侵、虐童、毒品等重大情事者為消極資格，嚴禁在園內服務。" },
+                { q: "隨車人員在幼兒下車後，最重要的一個動作是什麼？", options: {A: "馬上關閉車門", B: "立刻填寫加油紀錄", C: "準備下一次的路線圖", D: "確認車內已無留置幼兒"}, ans: "D", desc: "必須再次巡查座位，確認車內已無留置幼兒以防熱傷害意外。" },
+                { q: "幼兒園應將「乘坐幼童專用車幼兒名冊」如何處理？", options: {A: "僅放在園長室備查", B: "由隨車人員隨身攜帶並落實紀錄", C: "張貼在車窗玻璃上", D: "每週更新一次即可"}, ans: "B", desc: "乘坐名冊應由隨車人員隨身攜帶，以便清點、落實紀錄與緊急避難使用。" },
+                { q: "身體著火的正確處置步驟：停、      、滾？", options: {A: "趴", B: "跳", C: "蹲", D: "跪"}, ans: "A", desc: "身體著火的正確處置步驟為：停、趴（雙手捂臉）、滾。" },
+                { q: "幼童專用車行車時遇到地震時，下列何者不是應該採取的應變措施？", options: {A: "車子直接停駛在路中間", B: "駕駛靠右邊停車", C: "避免緊急煞車", D: "打開危險警告燈並減速將車輛靠右邊停駛"}, ans: "A", desc: "地震時應開警示燈並減速靠右停駛，絕對不可直接停在馬路中間阻礙救援。" },
+                { q: "火災分類其中B類火災為下列何者？", options: {A: "液體油類等可燃液體火災", B: "木材、紙張等固體材料火災", C: "金屬、汽車零件等火災", D: "電器走火、短路等火災"}, ans: "A", desc: "B類火災指汽油、柴油、有機溶劑等液體油類及可燃性液體或氣體火災。" },
+                { q: "滅火時要針對火的什麼位置滅火效果會最好？", options: {A: "裡面", B: "上部", C: "左邊", D: "底部。"}, ans: "D", desc: "使用滅火器時應對準火焰的根部（底部）左右掃射，才能阻斷燃燒鏈。" },
+                { q: "幼兒園平時應建立「代理人員名冊」，其主要目的是什麼？", options: {A: "增加行政作業負擔", B: "應付警察路檢時隨手拿一張紙替代", B: "為了多領取政府補助", D: "確保突發狀況時，能有「已受訓並審核過資格」的人員立即接手"}, ans: "D", desc: "建立審核過的代理人名冊，是為了在人員臨時請假時，仍能維持法定的安全與專業標準。" },
+                { q: "幼兒園購置幼童專用車並向監理機關領取牌照後，應於幾日內報請直轄市、縣（市）主管機關備查，才可開始使用？", options: {A: "三十日內", B: "十五日內", C: "五日內", D: "立即報備，無天數規定"}, ans: "B", desc: "依據管理辦法第 8 條規定，應於領取牌照後十五日內，報請主管機關備查。" },
+                { q: "學習心肺復甦術的核心目的何者為非？", options: {A: "搶救黃金救命時間", B: "提升AED成功率", C: "建立專長", D: "維護器官與組織功能"}, ans: "C", desc: "心肺復甦術（CPR）的核心目的是救人與維持器官生命功能，而非為了個人建立專長。" },
+                { q: "幼兒園若未經核准（未報局備查）即私自使用車輛載運幼兒，依《幼教法》規定，除了罰鍰外，主管機關可採取何種行政處分？", options: {A: "沒收幼兒園的立案證書", B: "吊銷園長個人的教師證", C: "命其限期改善，屆期未改善得按次處罰，情節嚴重者得減少招收人數或停辦", D: "沒收該部車輛"}, ans: "C", desc: "私載處罰為限期改善、按次處罰，最重得減少招收人數、停止招生或停辦。" },
+                { q: "幼童專用車行車時遇到地震時，下列何者不是應該採取的應變措施？（複選題型轉化）", options: {A: "駕駛靠右邊停車", B: "車子直接停駛在路中間", C: "避免緊急煞車", D: "打開危險警告燈並減速將車輛靠右邊停駛"}, ans: "B", desc: "地震時不可直接將車輛停在路中央，應開警示燈並減速靠右停放。" },
+                { q: "何謂有效胸部按壓?", options: {A: "用力壓、快快壓", B: "確保每次按壓後胸部完全回彈", C: "避免中斷,中斷時間不超過10秒", D: "以上皆是"}, ans: "D", desc: "有效按壓口訣：用力壓、快快壓、胸回彈、莫中斷（中斷不超過10秒）。" },
+                { q: "對成人急救時,正確的胸部按壓深度為多少?", options: {A: "至少 5公分", B: "有壓即可", C: "越深越好", D: "聽到肋骨的卡卡聲"}, ans: "A", desc: "對成人急救時，正確的胸部按壓深度是至少 5 公分，但不要超過 6 公分。" },
+                { q: "發生猝死時黃金急救時間,何者為是?", options: {A: "4分鐘", B: "10分鐘", C: "2分鐘", D: "1分鐘"}, ans: "A", desc: "猝死發生的黃金急救時間為心跳停止後的 4 至 6 分鐘內。" },
+                { q: "使用AED貼片的位置應蓋貼在患者的右上肩及什麼位置？", options: {A: "額頭", B: "背部", C: "胸口前", D: "左下腹。"}, ans: "D", desc: "AED成人貼片標準位置：右鎖骨下方（右上胸）及左乳頭外側下方（左下胸側/左下腹邊緣位置）。" },
+                { q: "車用乾粉粉滅火器的有效期限是幾年？", options: {A: "3年", B: "2年", C: "1年", D: "永久有效"}, ans: "A", desc: "一般車用乾粉滅火器藥劑與瓶身的性能認可有效期限通常為 3 年。" },
+                { q: "人無意識復甦姿勢以下何者錯誤？", options: {A: "嘴巴朝下", B: "正面躺", C: "腿部稍微彎曲", D: "頭部放置在手上。"}, ans: "B", desc: "復甦姿勢（復甦側臥位）最關鍵的是側躺而非正面躺，以防止嘔吐物阻塞呼吸道。" },
+                { q: "怎麼識別滅火器是否有合格性能檢查？", options: {A: "壓力表", B: "瓶身", C: "檢修標籤貼紙", D: "是否有插銷束環。"}, ans: "C", desc: "應檢查本體上是否有張貼經認可檢修合格的「檢修標籤貼紙」或標章。" },
+                { q: "當車輛發生災害時要破壞車窗逃生時應使用車窗擊破器敲擊玻璃的什麼地方？", options: {A: "中心點", B: "車窗上緣", C: "車窗下緣", D: "車窗的四個角。"}, ans: "D", desc: "安全玻璃（強化玻璃）的四周角落最脆弱，敲擊四個角最容易破窗。" },
+                { q: "成人生存之鏈的第一個環結為?", options: {A: "立刻進行心肺復甦術", B: "大聲求救撥打119(啟動緊急醫療系統)", C: "使用電擊器", D: "高級心臟去顫術"}, ans: "B", desc: "成人生存之鏈第一環：儘早求救並啟動緊急醫療系統 (撥打119)。" },
+                { q: "幼童專用車因車齡屆滿 10 年或損壞不堪使用而欲「汰換」時，第一步行政程序為何？", options: {A: "只要通知家長即可", B: "直接將車輛賣給廢車回收場", C: "先向監理機關辦理報廢或繳銷，再報主管機關（教育局）備查", D: "先向教育局申請異動或繳銷，再向監理機關辦理"}, ans: "C", desc: "車輛異動時，應先向監理機關辦理登記（報廢或繳銷），再報主管機關（教育局）備查。" },
+                { q: "隨車人員在代理期間，若發生幼兒遺留車內事故，其法律責任歸屬為何？", options: {A: "代理人員及幼兒園負責人均須負擔相關行政與法律責任", B: "由幼兒園工會代為負責", C: "因為是代理，故無須負法律責任", D: "由駕駛人負全部責任"}, ans: "A", desc: "代理人員執行業務時法律責任與正式隨車人員相同，負責人亦連帶承擔行政與法律責任。" },
+                { q: "關於「隨車人員」的職前訓練，依《臺北市學生及幼兒交通車管理自治條例》，應包含下列哪項重點？", options: {A: "幼兒心理諮商", B: "園所行銷技巧", C: "車輛引擎維修", D: "交通車安全與緊急應變處置"}, ans: "D", desc: "自治條例規定安全教育訓練應包含：交通車安全、逃生演練及緊急應變處置等實務。" },
+                { q: "幼童專用車發生行車事故時，駕駛人及隨車人員首要工作為何？", options: {A: "拍照存證以利後續理賠", B: "立即疏散幼兒", C: "留在原位等待警察前來", D: "打電話給幼兒園園長"}, ans: "B", desc: "發生行車事故或火災時，保護幼兒生命安全為最上位，首要任務是「立即疏散幼兒」。" }
+            ]
         };
     },
     methods: {
         startQuiz() {
-            if(!this.user.name || !this.user.school || !this.user.role) return alert('請填寫完整資訊');
-            this.userAnswers = new Array(this.currentQuestions.length).fill(null);
+            if(!this.user.name || !this.user.school) return alert('請完整填寫姓名與服務園所！');
             this.stage = 'quiz';
-            this.currentIdx = 0; // 確保從第一題開始
             this.timer = setInterval(() => { 
                 this.timeLeft--; 
                 if(this.timeLeft <= 0) this.submitQuiz(); 
             }, 1000);
         },
-        formatTime(s) { 
-            const m = Math.floor(s/60);
-            const sec = s%60;
-            return `${m} 分 ${sec < 10 ? '0'+sec : sec} 秒`; 
-        },
-        next() { 
-            if(this.currentIdx < this.currentQuestions.length - 1) {
-                this.currentIdx++; 
-                window.scrollTo(0,0);
-            }
-        },
-        prev() { 
-            if(this.currentIdx > 0) {
-                this.currentIdx--; 
-                window.scrollTo(0,0);
-            }
-        },
-        confirmSubmit() { 
-            if(confirm('確定要繳交並回傳成績嗎？')) this.submitQuiz(); 
-        },
+        formatTime(s) { return `${Math.floor(s/60)}分${s%60}秒`; },
+        next() { if(this.currentIdx < 39) this.currentIdx++; },
+        prev() { if(this.currentIdx > 0) this.currentIdx--; },
+        confirmSubmit() { if(confirm('確定繳交試卷嗎？')) this.submitQuiz(); },
         async submitQuiz() {
             clearInterval(this.timer);
             this.isSubmitting = true;
-            
-            let correctCount = 0;
-            this.currentQuestions.forEach((q, i) => { 
-                if(this.userAnswers[i] === q.ans) correctCount++; 
-            });
-            this.score = Math.round((correctCount / this.currentQuestions.length) * 100);
+            let correct = 0;
+            this.allQuestions.forEach((q, i) => { if(this.userAnswers[i] === q.ans) correct++; });
+            this.score = correct * 2.5; 
             this.finishDate = new Date().toLocaleString();
-
-            const payload = {
-                name: this.user.name,
-                school: this.user.school,
-                role: this.user.role,
-                score: this.score
-            };
+            this.usedTimeText = this.formatTime(3600 - this.timeLeft);
 
             try {
-                // 回傳至 Google Sheets (Excel)
-                await fetch(GAS_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                alert("測驗完成！成績已自動上傳。");
-            } catch (e) {
-                console.error(e);
-                alert("回傳伺服器失敗，但您的成績已計算完成。");
-            } finally {
+                const params = new URLSearchParams({...this.user, score: this.score, usedTime: this.usedTimeText});
+                await fetch(`${SHEET_URL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' });
+            } catch (e) { console.error(e); }
+
+            setTimeout(() => {
                 this.isSubmitting = false;
                 this.stage = 'result';
                 window.scrollTo(0,0);
-            }
+            }, 1500);
         },
         downloadPDF(event) {
             const btn = event.target;
             btn.innerText = "產生中...";
-            const opt = {
+            html2pdf().set({
                 margin: 10,
-                filename: `114年度幼童車研習_${this.user.name}.pdf`,
+                filename: `115隨車人員研習_${this.user.name}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            html2pdf().set(opt).from(document.getElementById('result-content')).save().then(() => {
-                btn.innerText = "下載 PDF 成績存證";
-            });
+            }).from(document.getElementById('result-content')).save().then(() => btn.innerText = "下載 PDF 成績紀錄");
         }
     },
-    computed: {
-        currentQuestions() { 
-            return this.questionBank[this.user.role] || []; 
-        },
-        currentQuestion() { 
-            return this.currentQuestions[this.currentIdx]; 
-        }
-    }
+    computed: { currentQuestion() { return this.allQuestions[this.currentIdx]; } }
 }).mount('#app');
 </script>
 </body>
